@@ -14,26 +14,45 @@ pieces of the real code. The full source is kept private; the [`snippets/`](snip
 - A **custom WordPress theme, written from scratch** (no page builder and no bought theme), plus a small
   **companion plugin** that owns the portfolio data. If the theme ever changes, the projects stay.
 - **PHP 8, vanilla JavaScript, Tailwind CSS 4.** No front-end framework: the site sends only what each page needs.
-- **Every project gets a page that fits it**: a store-style page for a game, an artist page for music, a channel page
-  for YouTube, a product page for software, and a standard case study for websites.
-- **Live data** from the Spotify Web API, public YouTube channel data and the GitHub Releases API, cached on the
-  server so the pages stay fast.
+- **Every project gets a page that fits it**: a store-style page for a game, a studio page, an artist page for
+  music, a product page for software, and pages in each client's own look for websites.
+- **Live data** from the Spotify Web API, the GitHub API (releases and recent activity) and the site's own
+  analytics, cached on the server so the pages stay fast.
 - **Fast, measured**: on the homepage, LCP 0.33 s, CLS 0 and INP 16 ms in a local Chrome DevTools run (Google's
   "good" limits are 2.5 s, 0.1 and 200 ms).
 - **Privacy first**: first-party analytics only after cookie consent, no IP addresses stored, and YouTube/Spotify
   embeds that load nothing until you press play.
 
+## What's new (October 2026)
+
+- **AxisNex page, rebuilt for V1.2.5.** The app is now simply "AxisNex", so the page follows its wording: a
+  controller tool, with product and game names only where they describe compatibility. A red **"not affiliated"
+  notice** sits right under the title and again at the end. The page reads like a short guide: an **"On this page"**
+  row and numbered sections, from what it does to how it works under the hood.
+- **A 50-second promo video** on the AxisNex page, in a phone frame, with **chapters** you can click to jump to a
+  part. In full screen it stays 9:16, never cropped. It loads nothing until you press play.
+- **Page views from my own analytics** on the AxisNex page and on its project card. Old addresses count too
+  (INPUT ZERO → AxisNex), and the number updates even on a cached copy of the page.
+- **"Most viewed" carousel** on the Projects page, ranked by real visitors from the same analytics.
+- **"Now" on the homepage**: my latest public work on GitHub (releases, updates and new projects), right under the hero.
+- **"After hours"** on the homepage: MOOD99, my music, with live Spotify numbers.
+- **The analytics dashboard, in plain words**: an "In short" sentence at the top, every number explained, deleted
+  pages left out and renamed pages merged. More in [wltziff-analytics](https://github.com/wlt1920/wltziff-analytics).
+- **Fewer, better projects**: the YouTube channels (Secunda Fatală, Moodanele) were removed from the site;
+  LVMINNA, VioTaxi, StemVrij, KroneeQ and wltziff Analytics each have their own page.
+
 ## The design
 
 ![Selected work carousel](screenshots/home-work.jpg)
 
-The site is about range: websites, software, a horror game, a YouTube channel and music. The design had to hold all
+The site is about range: websites, software, a horror game, a game studio and music. The design had to hold all
 of that without looking like five different sites, so the base stays the same and each project adds its own colour.
 
 - **Dark and editorial.** Large condensed headings (Anton), a monospace font for labels and metadata, and lots of
   space. The type does the work, so there's very little decoration.
 - **One accent per project.** Each project has an accent colour that tints its page and its slide in the homepage
-  carousel. MOOD99 uses Spotify green, Secunda Fatală uses YouTube red, and AxisNex uses the orange of the app.
+  carousel. MOOD99 uses Spotify green, AxisNex the orange of the app, StemVrij violet, VioTaxi taxi yellow and
+  LVMINNA candle gold.
 - **Motion with a purpose.** Headlines come in letter by letter, sections rise in as you scroll, and the carousel
   slides have depth. Every animation uses transform and opacity only (see [Performance](#performance)), and
   `prefers-reduced-motion` turns all of it off.
@@ -47,21 +66,27 @@ of that without looking like five different sites, so the base stays the same an
 |---|---|---|
 | ![Projects](screenshots/projects.jpg) | ![Mobile home](screenshots/mobile-home.jpg) | ![Mobile AxisNex](screenshots/mobile-axisnex.jpg) |
 
+> Screenshots from 3 October 2026. The AxisNex page has been redesigned since (see [What's new](#whats-new-october-2026)).
+
 ## How it's built
 
 ```text
 WordPress (PHP 8)
 ├── Companion plugin "WLT Projects"   custom post type for projects, categories, project fields (portable data)
 └── Theme "WLT"
-    ├── front-page.php                hero, selected-work carousel, speed band, about
+    ├── front-page.php                hero, "Now" from GitHub, selected work, "After hours", marquee
     ├── single-wlt_project.php        picks the presentation: web / video / music / game, or a custom page
     ├── inc/
-    │   ├── axisnex.php               software product page (live GitHub release info)
+    │   ├── axisnex.php               software product page (live GitHub release, promo video, page views)
     │   ├── reviews.php               reviews without accounts, with anti-spam
     │   ├── mood99.php, spotify.php   artist page with live Spotify data
-    │   ├── secunda.php, youtube.php  channel page with live YouTube numbers
-    │   ├── game.php                  store-style game and studio pages
-    │   ├── analytics.php             first-party analytics (consent only)
+    │   ├── youtube.php               homepage "After hours" (MOOD99, live numbers)
+    │   ├── github.php                homepage "Now": latest releases, updates and new projects
+    │   ├── game.php, kroneeq.php     store-style game page and the studio page
+    │   ├── lvminna.php, viotaxi.php,
+    │   │   stemvrij.php              project pages in each brand's own look
+    │   ├── analytics.php             first-party analytics (consent only), page views, "most viewed"
+    │   ├── analytics-page.php        the wltziff Analytics project page
     │   └── seo.php                   structured data and sitemap extras
     ├── assets/tailwind/site.css      source styles (Tailwind CSS 4), compiled into assets/css/main.css
     └── assets/js/main.js             all page behaviour, one file, no framework
@@ -90,10 +115,10 @@ review. There is no sign-up, so the anti-spam has to work without one:
 → [`snippets/02-reviews-no-account-anti-spam.php`](snippets/02-reviews-no-account-anti-spam.php)
 
 ### Live data, cached carefully
-The MOOD99 page lists every release as soon as it's out on Spotify. The Secunda Fatală page shows the channel's
-current subscribers and views. The AxisNex page always shows the newest version, installer size and SHA-256 from
-GitHub. Each source is cached on the server (an hour, a minute and six hours), and each has a fallback, so a slow
-API never slows the page down.
+The MOOD99 page lists every release as soon as it's out on Spotify. The AxisNex page always shows the newest
+version, installer size and SHA-256 from GitHub, and its download button always points at the newest installer,
+even on a cached copy of the page. The homepage's "Now" follows my GitHub activity. Each source is cached on the
+server and each has a fallback, so a slow API never slows the page down.
 
 → [`snippets/06-live-github-release.php`](snippets/06-live-github-release.php),
 [`snippets/07-spotify-api-cache.php`](snippets/07-spotify-api-cache.php)
